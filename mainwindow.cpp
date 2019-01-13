@@ -16,8 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
     //添加menu
     this->fileMenu=this->menuBar()->addMenu("文件");
     this->editMenu=this->menuBar()->addMenu("编辑");
+    this->buildMenu=this->menuBar()->addMenu("构建");
     this->helpMenu=this->menuBar()->addMenu("帮助");
-
 
     //file menu相关
     this->fileOpenAction=new QAction("打开",this);
@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     //edit menu相关
     this->editCopyAction=new QAction("拷贝",this);
-    //    this->editCopyAction->setShortcut(tr("Ctrl+C"));
+    this->editCopyAction->setShortcut(tr("Ctrl+C"));
     this->editMenu->addAction(editCopyAction);
     connect(this->editCopyAction,SIGNAL(triggered()),this,SLOT(onCopy()));
 
@@ -54,6 +54,18 @@ MainWindow::MainWindow(QWidget *parent)
     this->editSelectAllAction=new QAction("全选",this);
     this->editMenu->addAction(editSelectAllAction);
     connect(this->editSelectAllAction,SIGNAL(triggered()),this,SLOT(onSelectAll()));
+
+    //build menu相关
+    this->buildCompileActinon=new QAction("编译",this);
+    this->buildMenu->addAction(this->buildCompileActinon);
+    this->buildMenu->addSeparator();
+    connect(this->buildCompileActinon,SIGNAL(triggered()),this,SLOT(onCompile()));
+    this->buildRunActinon=new QAction("运行",this);
+    this->buildMenu->addAction(this->buildRunActinon);
+    this->buildMenu->addSeparator();
+    connect(this->buildRunActinon,SIGNAL(triggered()),this,SLOT(onRun()));
+
+
 
     //help menu相关
     this->helpAboutAction=new QAction("关于",this);
@@ -70,7 +82,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::onOpen()
 {
-    QString fileName=QFileDialog::getOpenFileName();
+    fileName=QFileDialog::getOpenFileName();
     if(fileName.isEmpty())
     {
         //没有选择任何文件
@@ -140,4 +152,19 @@ void MainWindow::onCut()
 void MainWindow::onSelectAll()
 {
     textEdit1->selectAll();
+}
+
+void MainWindow::onCompile()
+{
+    QString originalName=this->fileName;
+    QString destinationName=originalName.replace(".c",".exe");
+    QString command="gcc -o "+destinationName+" "+this->fileName;
+    system(command.toStdString().data());
+}
+
+void MainWindow::onRun()
+{
+    QString originalName=this->fileName;
+    QString destinationName=originalName.replace(".c",".exe");
+    system(destinationName.toStdString().data());
 }
