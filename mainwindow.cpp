@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -24,14 +23,20 @@ MainWindow::MainWindow(QWidget *parent)
     this->fileOpenAction=new QAction("打开",this);
     this->fileOpenAction->setShortcut(tr("Ctrl+O"));
     this->fileMenu->addAction(this->fileOpenAction);
-    this->fileExitAction=new QAction("退出",this);
-    this->fileExitAction->setShortcut(tr("Ctrl+Q"));
     this->fileMenu->addSeparator();
+
+    this->fileSaveAction=new QAction("保存",this);
+    this->fileSaveAction->setShortcut(tr("Ctrl+S"));
+    this->fileMenu->addAction(this->fileSaveAction);
+    this->fileMenu->addSeparator();
+
+    this->fileExitAction=new QAction("退出",this);
+    this->fileExitAction->setShortcut(this->tr("Ctrl+Q"));
     this->fileMenu->addAction(this->fileExitAction);
 
     connect(this->fileOpenAction,SIGNAL(triggered()),this,SLOT(onOpen()));
     connect(this->fileExitAction,SIGNAL(triggered()),this,SLOT(onExit()));
-
+    connect(this->fileSaveAction,SIGNAL(triggered()),this,SLOT(onSave()));
 
     //edit menu相关
     this->editCopyAction=new QAction("拷贝",this);
@@ -65,7 +70,46 @@ MainWindow::~MainWindow()
 
 void MainWindow::onOpen()
 {
-    QMessageBox::information(this,"title","测试");
+    QString fileName=QFileDialog::getOpenFileName();
+    if(fileName.isEmpty())
+    {
+        //没有选择任何文件
+        return;
+    }
+    const char *fn=fileName.toStdString().data();//QString 转化成 const char*;
+    QString content;
+    FILE *fp=fopen(fn,"r");
+    if(fp==nullptr)
+    {
+        QMessageBox::information(this,"错误","打开文件失败");
+    }else {
+        while(!feof(fp)){
+            char buf[2048]={'\0'};
+            fgets(buf,sizeof(buf),fp);
+            content+=buf;
+        }
+        fclose(fp);
+        this->textEdit1->setText(content);//将QS里面的字符串放入text里面
+    }
+
+}
+
+void MainWindow::onSave()
+{
+    QString fileName=QFileDialog::getSaveFileName();
+    if(fileName.isEmpty())
+    {
+        return;
+    }
+    FILE *fp=fopen(fileName.toStdString().data(),"w");
+    if(fp==nullptr)
+    {
+        QMessageBox::information(this,"错误","打开文件失败");
+    }else{
+        const char*tp=this->textEdit1->toPlainText().toStdString().data();//将界面中的文字转换为 const char*
+        fputs(tp,fp);
+        fclose(fp);
+    }
 }
 
 void MainWindow::onAbout()
@@ -75,7 +119,7 @@ void MainWindow::onAbout()
 
 void MainWindow::onExit()
 {
-    exit(0);
+    //exit(0);
 }
 
 void MainWindow::onCopy()
